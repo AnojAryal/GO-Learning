@@ -8,6 +8,12 @@ import (
 )
 
 func main() {
+	db, err := InitializeDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	router := mux.NewRouter()
 	const port = ":8000"
 
@@ -17,8 +23,8 @@ func main() {
 		resp.Write([]byte("Up and Running..."))
 	})
 
-	router.HandleFunc("/posts", getPosts).Methods("GET")
-	router.HandleFunc("/posts", addPost).Methods("POST")
+	router.HandleFunc("/posts", getPosts(db)).Methods("GET")
+	router.HandleFunc("/posts", addPost(db)).Methods("POST")
 
 	log.Println("Server listening on Port", port)
 	log.Fatal(http.ListenAndServe(port, router))

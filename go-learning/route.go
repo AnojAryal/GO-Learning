@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 )
@@ -12,42 +13,58 @@ type Post struct {
 	Completed   bool   `json:"completed"`
 }
 
-var posts = []Post{
-	{ID: 1, Title: "Eat Pizza", Description: "GO and Eat Pizza", Completed: false},
-}
+func getPosts(db *sql.DB) http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		rows, err := db.Query("SELECT id, title, description, completed FROM posts")
+		if err != nil {
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
 
-func getPosts(resp http.ResponseWriter, req *http.Request) {
-	resp.Header().Set("Content-Type", "application/json")
-	resp.WriteHeader(http.StatusOK)
+		var posts []Post
+		for rows.Next() {
+			var post Post
+			if err := rows.Scan(&post.ID, &post.Title, &post.Description, &post.Completed); err != nil {
+				http.Error(resp, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			posts = append(posts, post)
+		}
+		if err := rows.Err(); err != nil {
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	if err := json.NewEncoder(resp).Encode(posts); err != nil {
-		resp.WriteHeader(http.StatusInternalServerError)
-		resp.Write([]byte(`{"error": "error marshalling the posts array"}`))
-		return
+		resp.Header().Set("Content-Type", "application/json")
+		resp.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(resp).Encode(posts); err != nil {
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
 
-func addPost(resp http.ResponseWriter, req *http.Request) {
-	var post Post
-	err := json.NewDecoder(req.Body).Decode(&post)
-	if err != nil {
-		resp.WriteHeader(http.StatusInternalServerError)
-		resp.Write([]byte(`{"error": "error unmarshalling the request"}`))
-		return
+func addPost(db *sql.DB) http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		var post Post
+		err := json.NewDecoder(req.Body).Decode(&post)
+		if err != nil {
+			http.Error(resp, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = db.QueryRow(
+			"INSERT INTO posts (title, description, completed) VALUES ($1, $2, $3) RETURNING id",
+			post.Title, post.Description, post.Completed).Scan(&post.ID)
+		if err != nil {
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		resp.Header().Set("Content-Type", "application/json")
+		resp.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(resp).Encode(post); err != nil {
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+		}
 	}
-
-	post.ID = len(posts) + 1
-	posts = append(posts, post)
-
-	resp.Header().Set("Content-Type", "application/json")
-	resp.WriteHeader(http.StatusOK)
-
-	result, err := json.Marshal(post)
-	if err != nil {
-		resp.WriteHeader(http.StatusInternalServerError)
-		resp.Write([]byte(`{"error": "error marshalling the post object"}`))
-		return
-	}
-
-	resp.Write(result)
 }
