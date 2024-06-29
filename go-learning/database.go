@@ -23,4 +23,3 @@ func InitializeDB() (*sql.DB, error) {
 	log.Println("Successfully connected to the database")
 	return db, nil
 }
-

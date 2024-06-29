@@ -1,0 +1,30 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_bin/
+_vendor/
+.vscode/
+
+# Go specific
+# Binary executable for main application
+main
+
+# Ignore any file ending in .exe for Windows
+*.exe
+
+# Compiled Go binaries
+*.exe
+*.test
+*.prof
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Ignore any log files
+*.log
+
+# Dependencies
+vendor/
