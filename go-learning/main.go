@@ -9,7 +9,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// @title Your API Title
+// @title Learning Golang
 // @version 1.0
 // @description This is a sample server for your Go application.
 // @host localhost:8000
@@ -33,6 +33,7 @@ func main() {
 
 	router.HandleFunc("/posts", getPosts(db)).Methods("GET")
 	router.HandleFunc("/posts", addPost(db)).Methods("POST")
+	router.HandleFunc("/posts/{id}",deletePost(db)).Methods("DELETE")
 
 	// Serve Swagger UI
 	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)

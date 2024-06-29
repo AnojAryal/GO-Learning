@@ -4,15 +4,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 
 	_ "go-learning/docs"
 )
-
-// @title Your API Title
-// @version 1.0
-// @description This is a sample server for your Go application.
-// @host localhost:8000
-// @BasePath /
 
 // Post represents a blog post
 type Post struct {
@@ -94,3 +92,48 @@ func addPost(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+
+// deletePost godoc
+// @Summary Delete a post by ID
+// @Description Delete a post by ID
+// @Tags posts
+// @Produce json
+// @Param id path int true "Post ID"
+// @Success 204 "No Content"
+// @Router /posts/{id} [delete]
+func deletePost(db *sql.DB) http.HandlerFunc {
+	return func(resp http.ResponseWriter, req *http.Request) {
+		// Get the ID from the URL parameters
+		vars := mux.Vars(req)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(resp, "Invalid post ID", http.StatusBadRequest)
+			return
+		}
+
+		// Execute the delete query
+		result, err := db.Exec("DELETE FROM posts WHERE id = $1", id)
+		if err != nil {
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Check if any rows were affected
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if rowsAffected == 0 {
+			http.Error(resp, "Post not found", http.StatusNotFound)
+			return
+		}
+
+		// Set the response header and status code
+		resp.Header().Set("Content-Type", "application/json")
+		resp.WriteHeader(http.StatusCreated)
+		if err := json.NewEncoder(resp).Encode(vars); err != nil {
+			http.Error(resp, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}

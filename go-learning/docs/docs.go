@@ -69,6 +69,32 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/posts/{id}": {
+            "delete": {
+                "description": "Delete a post by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Delete a post by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -98,7 +124,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8000",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Your API Title",
+	Title:            "Learning Golang",
 	Description:      "This is a sample server for your Go application.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

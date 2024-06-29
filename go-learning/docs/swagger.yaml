@@ -15,7 +15,7 @@ host: localhost:8000
 info:
   contact: {}
   description: This is a sample server for your Go application.
-  title: Your API Title
+  title: Learning Golang
   version: "1.0"
 paths:
   /posts:
@@ -52,6 +52,23 @@ paths:
           schema:
             $ref: '#/definitions/main.Post'
       summary: Add a new post
+      tags:
+      - posts
+  /posts/{id}:
+    delete:
+      description: Delete a post by ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      summary: Delete a post by ID
       tags:
       - posts
 swagger: "2.0"
